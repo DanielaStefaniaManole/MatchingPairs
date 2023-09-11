@@ -9,7 +9,7 @@ import UIKit
 import SnapKit
 
 protocol MainViewDelegate: AnyObject {
-    func viewDidTapMain(view: MainView)
+    func viewDidTapMainButton(view: MainView)
     func viewDidTapBack(view: MainView)
 }
 
@@ -130,8 +130,25 @@ class MainView: UIView {
         }
     }
     
+    func resetGame() {
+        startButton.setTitle(.start, for: .normal)
+        cardsCollectionView.reloadData()
+        timerLabel.text = .timerStart
+        scoreLabel.isHidden = true
+        statusLabel.isHidden = true
+    }
+    
+    func endGame(winner: Bool, score: String) {
+        startButton.setTitle(.tryAgain, for: .normal)
+        scoreLabel.isHidden = false
+        statusLabel.isHidden = false
+        statusLabel.text = winner ? .won : .lost
+        scoreLabel.text = "Score: \(score)"
+        cardsCollectionView.isHidden = true
+    }
+    
     @objc func tappedStart() {
-        delegate?.viewDidTapMain(view: self)
+        delegate?.viewDidTapMainButton(view: self)
     }
         
     @objc func tappedBack() {

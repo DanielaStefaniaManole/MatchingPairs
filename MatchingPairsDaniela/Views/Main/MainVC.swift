@@ -6,26 +6,23 @@
 //
 
 import UIKit
+import MPServices
 
 class MainVC: UIViewController, MainViewDelegate {
     
     private var theme: Theme
+    weak var timer: Timer?
     private var cardSymbols: [String] = []
     private var isGameFinished = false
     private var isUserPlaying = false
     private var previousIndexPath = IndexPath()
     private var layout = UICollectionViewFlowLayout()
-    weak var timer: Timer?
     private var numberOfSeconds = 45
     private var numberOfTries = 0
-    private var numberOfMatches = 0 {
-        didSet {
-            if numberOfMatches == cardSymbols.count {
-                endGame(winner: true)
-            }
-        }
-    }
+    private var numberOfMatches = 0
     
+    private var isPhone = UIDevice.current.userInterfaceIdiom == .phone
+    private var isLandscape = UIDevice.current.orientation.isLandscape
     private let contentView = MainView()
     
     init(theme: Theme) {
@@ -53,17 +50,38 @@ class MainVC: UIViewController, MainViewDelegate {
         contentView.cardsCollectionView.dataSource = self
     }
     
-    override func viewDidLayoutSubviews() {
+    override func viewDidLayoutSubviews() { // calculate card cell size
         if let flowLayout = contentView.cardsCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
-            let numberOfItemsPerRow: CGFloat = 5
-            let spacingBetweenItems: CGFloat = 1
-            let totalSpacing = (numberOfItemsPerRow - 1) * spacingBetweenItems
-            let itemWidth = (contentView.cardsCollectionView.bounds.width - totalSpacing) / numberOfItemsPerRow
-            flowLayout.itemSize = CGSize(width: itemWidth, height: itemWidth)
+            var numberOfItemsPerRow = 0
+            let width = contentView.cardsCollectionView.bounds.width
+            let height = contentView.cardsCollectionView.bounds.height
+            
+            if isPhone {
+                if width > height {
+                    numberOfItemsPerRow = 5
+                } else {
+                    numberOfItemsPerRow = 3
+                }
+            } else {
+                if width > height {
+                    numberOfItemsPerRow = 4
+                } else {
+                    numberOfItemsPerRow = 3
+                }
+            }
+            
+            let numberOfItemsPerColumn: Int = cardSymbols.count / numberOfItemsPerRow
+            var itemSize = width / CGFloat(numberOfItemsPerRow + 1)
+            
+            if width > height {
+                itemSize = height / CGFloat(numberOfItemsPerColumn + 1)
+            }
+        
+            flowLayout.itemSize = CGSize(width: itemSize, height: itemSize)
         }
     }
     
-    func viewDidTapMain(view: MainView) {
+    func viewDidTapMainButton(view: MainView) {
         if isGameFinished { // player finished the game
             resetGame()
             isGameFinished = false
@@ -91,38 +109,29 @@ class MainVC: UIViewController, MainViewDelegate {
     }
     
     func resetGame() {
-        contentView.startButton.setTitle(.start, for: .normal)
+        contentView.resetGame()
         isUserPlaying = false
         previousIndexPath = IndexPath()
         cardSymbols.shuffle()
-        contentView.cardsCollectionView.reloadData()
         timer?.invalidate()
-        contentView.timerLabel.text = .timerStart
-        contentView.scoreLabel.isHidden = true
-        contentView.statusLabel.isHidden = true
         numberOfTries = 0
         numberOfMatches = 0
         numberOfSeconds = 45
     }
     
     func endGame(winner: Bool) {
-        contentView.startButton.setTitle(.tryAgain, for: .normal)
-        contentView.scoreLabel.isHidden = false
-        contentView.statusLabel.isHidden = false
-        contentView.statusLabel.text = winner ? .won : .lost
-        contentView.scoreLabel.text = "Score: \(calculateScore())"
+        contentView.endGame(winner: winner, score: computeScore())
         timer?.invalidate()
         isUserPlaying = false
         isGameFinished = true
-        contentView.cardsCollectionView.isHidden = true
     }
     
-    func calculateScore() -> String {
-        let timeScore = ((45 - numberOfSeconds) / 45) * 20 // 20%
-        let triesScore = 30 / (numberOfTries - cardSymbols.count + 1) // 30%
-        let matchScore = (numberOfMatches / cardSymbols.count) * 50 // 50%
-        
-        return String(timeScore + triesScore + matchScore)
+    func computeScore() -> String {
+        let score = MPServices.computeScore(numberOfSeconds: numberOfSeconds,
+                                            numberOfTries: numberOfTries,
+                                            numberOfMatches: numberOfMatches,
+                                            numberOfCards: cardSymbols.count)
+        return String(score)
     }
     
     func viewDidTapBack(view: MainView) {
@@ -163,6 +172,9 @@ extension MainVC: UICollectionViewDelegate, UICollectionViewDataSource {
                         previousCard?.match()
                         currentCard?.match()
                         self.numberOfMatches += 2
+                        if numberOfMatches == cardSymbols.count {
+                            endGame(winner: true)
+                        }
                     } else {
                         previousCard?.flip()
                         currentCard?.flip()
