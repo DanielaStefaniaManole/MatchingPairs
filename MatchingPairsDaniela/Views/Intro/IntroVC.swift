@@ -17,14 +17,10 @@ class IntroVC: UIViewController, IntroViewDelegate {
         view = contentView
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        loadThemes()
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         contentView.delegate = self
+        loadThemes()
     }
     
     private func loadThemes() {

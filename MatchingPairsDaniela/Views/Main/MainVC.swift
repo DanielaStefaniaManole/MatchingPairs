@@ -159,23 +159,23 @@ extension MainVC: UICollectionViewDelegate, UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if isUserPlaying { // cards can't be selected if the player didn't press start
-            if indexPath != previousIndexPath {
-                numberOfTries += 1
-            }
-            
+            numberOfTries += 1
             let currentCard = collectionView.cellForItem(at: indexPath) as? CardCell
-            currentCard?.flip { [weak self] _ in
+            currentCard?.flip { [weak self] _ in // flip the current card
                 guard let self = self else { return }
                 if self.numberOfTries % 2 == 0 {
                     let previousCard = collectionView.cellForItem(at: self.previousIndexPath) as? CardCell
-                    if currentCard?.frontSymbol == previousCard?.frontSymbol {
+                    if indexPath == previousIndexPath { // if user clicks the same card
+                        previousIndexPath = IndexPath()
+                        return
+                    } else if currentCard?.frontSymbol == previousCard?.frontSymbol { // if cards match
                         previousCard?.match()
                         currentCard?.match()
                         self.numberOfMatches += 2
                         if numberOfMatches == cardSymbols.count {
                             endGame(winner: true)
                         }
-                    } else {
+                    } else { // close the cards if no match
                         previousCard?.flip()
                         currentCard?.flip()
                     }

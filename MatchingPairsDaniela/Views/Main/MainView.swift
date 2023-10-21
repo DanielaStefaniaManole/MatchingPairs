@@ -15,7 +15,7 @@ protocol MainViewDelegate: AnyObject {
 
 class MainView: UIView {
     
-    lazy var backButton: UIButton = {
+    var backButton: UIButton = {
         let button = UIButton()
         button.setTitle(.backToThemes, for: .normal)
         button.setTitleColor(.text, for: .normal)
@@ -23,7 +23,7 @@ class MainView: UIView {
         return button
     }()
     
-    lazy var timerLabel: UILabel = {
+    var timerLabel: UILabel = {
         let label = UILabel()
         label.text = .timerStart
         label.font = .titleBold

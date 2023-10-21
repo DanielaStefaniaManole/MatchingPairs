@@ -49,7 +49,7 @@ class CardCell: UICollectionViewCell {
         self.backSymbol = backSymbol
         self.symbolLabel.text = backSymbol
         isMatched = false
-        
+        isFlipped = false
         contentView.backgroundColor = backgroundColor
         contentView.isHidden = false
         isUserInteractionEnabled = true
